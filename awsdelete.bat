@@ -1,0 +1,1 @@
+aws.cmd s3 rm s3://webao/base/sounds/ --exclude * --include *.opus --recursive --page-size 50 --dryrun --endpoint-url=https://s3.wasabisys.com/
