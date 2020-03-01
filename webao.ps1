@@ -1,4 +1,4 @@
-﻿$BaseFolder       = "E:\Attorney Online\Attorney Online supermerge webAO edition\base\"
+﻿$BaseFolder       = "E:\Attorney Online\Attorney Online supermerge webAO edition\base"
 
 $CharactersFolder = $BaseFolder + "\characters\"
 
@@ -92,47 +92,47 @@ Get-ChildItem -recurse $BaseFolder | ?{ $_.PSIsContainer -And $_.Name -CMatch "[
 Get-ChildItem -recurse $BaseFolder | % {
     if (!($_.PSIsContainer) ) {
         if( $_.Name -eq "desktop.ini") {
-            # Delete all Thumbs.db
+            # Delete all windows ini files
             Write-Host $_.FullName " deleted"
             Remove-Item $_.FullName
 
         }elseif( $_.Name -like "*.rar") {
-            # Delete all Thumbs.db
+            # Delete all archives
             Write-Host $_.FullName " deleted"
             Remove-Item $_.FullName
 
         }elseif( $_.Name -like "*.7z") {
-            # Delete all Thumbs.db
+            # Delete all archives
             Write-Host $_.FullName " deleted"
             Remove-Item $_.FullName
 
         }elseif( $_.Name -like "*.zip") {
-            # Delete all Thumbs.db
+            # Delete all archives
             Write-Host $_.FullName " deleted"
             Remove-Item $_.FullName
 
         }elseif( $_.Name -like "*.psd") {
-            # Delete all Thumbs.db
+            # Delete all photoshop files
             Write-Host $_.FullName " deleted"
             Remove-Item $_.FullName
 
         }elseif( $_.Name -like "*.jp*g") {
-            # Delete all Thumbs.db
+            # Delete all jpeg
             Write-Host $_.FullName " deleted"
             Remove-Item $_.FullName
 
         }elseif( $_.Name -like "*.sfk") {
-            # Delete all Thumbs.db
+            # Delete all sony vegas files
             Write-Host $_.FullName " deleted"
             Remove-Item $_.FullName
 
         }elseif( $_.Name -like "*.apng") {
-            # Delete all Thumbs.db
+            # apng is not supported (((yet)))
             Write-Host $_.FullName + " deleted"
             Remove-Item $_.FullName
 
         }elseif( $_.Name -like "*.opus") {
-            # Delete all Thumbs.db
+            # opus is not supported (((yet)))
             Write-Host $_.FullName + " deleted"
             Remove-Item $_.FullName
 
@@ -141,6 +141,16 @@ Get-ChildItem -recurse $BaseFolder | % {
             Write-Host $_.FullName + " deleted"
             Remove-Item $_.FullName
 
+        }elseif( $_.Name -like "*.wav") {
+            # Delete the swoosh sound without any objection
+            $wavhash = Get-FileHash $_.FullName
+            if ($wavhash.Hash = 'E4D5B469F2952137C73A85580175552DEBEE829C6EF41267AF0F1A119883B69B') {
+            Write-Host $_.FullName + " deleted"
+            Remove-Item $_.FullName
+            } else {
+            Move-Item -LiteralPath $_.FullName -Destination $_.FullName.ToLower()
+            Write-Host $_.FullName
+            }
         }elseif ($_.Name -cne $_.Name.ToLower()) {
             # Rename to lowercase
             Move-Item -LiteralPath $_.FullName -Destination $_.FullName.ToLower()
