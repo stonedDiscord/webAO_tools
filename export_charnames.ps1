@@ -1,4 +1,4 @@
-﻿'export default [' | Out-File -encoding ASCII -FilePath "E:\Git\webAO\webAO\characters.js"
+﻿'export default [' | Out-File -encoding UTF8 -FilePath "E:\Git\webAO\webAO\characters.js"
 $charfolders = Get-ChildItem -Directory | %{
 $inifile = $_.FullName + '\char.ini'
 if (Test-Path $inifile) {
