@@ -5,7 +5,7 @@ $CharactersFolder = $BaseFolder + "\characters\"
 $LowercaseOnly = False
 
 # Rename the demothings
-$filelist = @(Get-ChildItem -Filter "*_char_icon.png" ($BaseFolder + "\misc\demothings\"))
+$filelist = @(Get-ChildItem -Force -Filter "*_char_icon.png" ($BaseFolder + "\misc\demothings\"))
 Write-Host $filelist
 ForEach ($file in $filelist){
     $Index = $file.Name.IndexOf('_char_icon.png')
@@ -23,7 +23,7 @@ ForEach ($file in $filelist){
 }
 
 # Rename the rosterthings
-$filelist = @(Get-ChildItem -Filter "*_off.png" ($BaseFolder + "\misc\rosterimage\"))
+$filelist = @(Get-ChildItem -Force -Filter "*_off.png" ($BaseFolder + "\misc\rosterimage\"))
 Write-Host $filelist
 ForEach ($file in $filelist){
     $Index = $file.Name.IndexOf('_off.png')
@@ -72,7 +72,7 @@ ForEach ($file in $filelist){
 Set-Location ($BaseFolder)
 
 # Get all the directories and rename them to lowercase
-Get-ChildItem -recurse $BaseFolder | ?{ $_.PSIsContainer -And $_.Name -CMatch "[A-Z]" } | %{
+Get-ChildItem -recurse $BaseFolder -Force | ?{ $_.PSIsContainer -And $_.Name -CMatch "[A-Z]" } | %{
     $NName = $_.FullName.ToLower()
     Write-Host $_.FullName
     # Set temp name to rename to the same name
@@ -84,12 +84,12 @@ Get-ChildItem -recurse $BaseFolder | ?{ $_.PSIsContainer -And $_.Name -CMatch "[
 
 # todo:
 # delete all these filetypes:
-#  *.txt *.rar *.7z *.psd *.jpg *.jpeg *.zip *.apng *.opus *.ase *.db *.sfk
+#  *.txt *.rar *.7z *.psd *.jpg *.jpeg *.zip *.apng *.ase *.db *.sfk
 
 # Go through the character folders and rename the sprites
 
 # Get the files and rename to lowercase
-Get-ChildItem -recurse $BaseFolder | % {
+Get-ChildItem -recurse $BaseFolder -Force | % {
     if (!($_.PSIsContainer) ) {
         if( $_.Name -eq "desktop.ini") {
             # Delete all windows ini files
@@ -131,11 +131,6 @@ Get-ChildItem -recurse $BaseFolder | % {
             Write-Host $_.FullName + " deleted"
             Remove-Item $_.FullName
 
-        }elseif( $_.Name -like "*.opus") {
-            # opus is not supported (((yet)))
-            Write-Host $_.FullName + " deleted"
-            Remove-Item $_.FullName
-
         }elseif( $_.Name -like "*.db") {
             # Delete all Thumbs.db
             Write-Host $_.FullName + " deleted"
@@ -144,13 +139,17 @@ Get-ChildItem -recurse $BaseFolder | % {
         }elseif( $_.Name -like "*.wav") {
             # Delete the swoosh sound without any objection
             $wavhash = Get-FileHash $_.FullName
-            if ($wavhash.Hash = 'E4D5B469F2952137C73A85580175552DEBEE829C6EF41267AF0F1A119883B69B') {
-            Write-Host $_.FullName + " deleted"
+            if ($wavhash.Hash -eq 'E4D5B469F2952137C73A85580175552DEBEE829C6EF41267AF0F1A119883B69B') {
+            Write-Host $_.FullName + " deleted with hash"
             Remove-Item $_.FullName
             } else {
             Move-Item -LiteralPath $_.FullName -Destination $_.FullName.ToLower()
             Write-Host $_.FullName
             }
+        }elseif ($_.Length -eq 0) {
+            # Delete all empty files
+            Write-Host $_.FullName + " deleted because empty "
+            Remove-Item $_.FullName
         }elseif ($_.Name -cne $_.Name.ToLower()) {
             # Rename to lowercase
             Move-Item -LiteralPath $_.FullName -Destination $_.FullName.ToLower()
