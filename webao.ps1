@@ -2,8 +2,6 @@
 
 $CharactersFolder = $BaseFolder + "\characters\"
 
-$LowercaseOnly = False
-
 # Rename the demothings
 $filelist = @(Get-ChildItem -Force -Filter "*_char_icon.png" ($BaseFolder + "\misc\demothings\"))
 Write-Host $filelist
@@ -94,7 +92,7 @@ Get-ChildItem -recurse $BaseFolder -Force | % {
         if( $_.Name -eq "desktop.ini") {
             # Delete all windows ini files
             Write-Host $_.FullName " deleted"
-            Remove-Item $_.FullName
+            Remove-Item $_.FullName -Force
 
         }elseif( $_.Name -like "*.rar") {
             # Delete all archives
@@ -112,6 +110,11 @@ Get-ChildItem -recurse $BaseFolder -Force | % {
             Remove-Item $_.FullName
 
         }elseif( $_.Name -like "*.psd") {
+            # Delete all photoshop files
+            Write-Host $_.FullName " deleted"
+            Remove-Item $_.FullName
+
+        }elseif( $_.Name -like "*.xcf") {
             # Delete all photoshop files
             Write-Host $_.FullName " deleted"
             Remove-Item $_.FullName
@@ -134,7 +137,7 @@ Get-ChildItem -recurse $BaseFolder -Force | % {
         }elseif( $_.Name -like "*.db") {
             # Delete all Thumbs.db
             Write-Host $_.FullName + " deleted"
-            Remove-Item $_.FullName
+            Remove-Item $_.FullName -Force
 
         }elseif( $_.Name -like "*.wav") {
             # Delete the swoosh sound without any objection
