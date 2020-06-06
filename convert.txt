@@ -1,0 +1,1 @@
+forfiles /S /M "*.apng" /C "E:\APNG\apng2gif.exe -t128 @file"
