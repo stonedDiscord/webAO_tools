@@ -160,3 +160,31 @@ Get-ChildItem -recurse $BaseFolder -Force | % {
         }
     }
 }
+
+$TI = (Get-Culture).TextInfo
+
+Set-Location($CharacterFolder)
+
+'export default [' | Out-File -encoding UTF8 -FilePath $BaseFolder + "\characterlist.js"
+$charfolders = Get-ChildItem -Directory | %{
+$inifile  = $_.FullName + '\char.ini'
+$charicon = $_.FullName + '\char_icon.png'
+if (Test-Path $inifile) {
+    Write-Host $TI.ToTitleCase($_.Name)
+    '    "' + $TI.ToTitleCase($_.Name) + '",' | Add-Content -Path $BaseFolder + "\characterlist.js"
+    }
+}
+
+'];' | Add-Content -Path $BaseFolder + "characterlist.js"
+
+Set-Location ($BaseFolder + '\sounds\general\')
+
+'export default [' | Out-File -encoding UTF8 -FilePath $BaseFolder + "\sfxlist.js"
+$charfolders = Get-ChildItem -File | %{
+if( $_.Name -like "sfx-*.wav") {
+    Write-Host $_.Name
+    '    "' + $_.Name + '",' | Add-Content -Path $BaseFolder + "\sfxlist.js"
+    }
+}
+
+'];' | Add-Content -Path $BaseFolder + "\sfxlist.js"
