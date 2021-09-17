@@ -1,5 +1,5 @@
-﻿$BaseFolder       = "E:\Attorney Online\Attorney Online supermerge webAO edition\base"
-
+﻿$BaseFolder       = "E:\Attorney Online\Attorney Online supermerge webAO edition\base\"
+$TI = (Get-Culture).TextInfo
 $CharactersFolder = $BaseFolder + "\characters\"
 
 # Rename the demothings
@@ -69,26 +69,23 @@ ForEach ($file in $filelist){
 
 Set-Location ($BaseFolder)
 
-# Get all the directories and rename them to lowercase
-Get-ChildItem -recurse $BaseFolder -Force | ?{ $_.PSIsContainer -And $_.Name -CMatch "[A-Z]" } | %{
-    $NName = $_.FullName.ToLower()
-    Write-Host $_.FullName
-    # Set temp name to rename to the same name
-    $TempItem = Move-Item -LiteralPath $_.FullName -Destination "$NName x" -PassThru
-    Move-Item -LiteralPath $TempItem.FullName -Destination $NName
-
-}
-
 
 # todo:
 # delete all these filetypes:
-#  *.txt *.rar *.7z *.psd *.jpg *.jpeg *.zip *.apng *.ase *.db *.sfk
+#  *.txt *.rar *.7z *.psd *.jpg *.jpeg *.zip *.ase *.db *.sfk
 
 # Go through the character folders and rename the sprites
 
 # Get the files and rename to lowercase
 Get-ChildItem -recurse $BaseFolder -Force | % {
     if (!($_.PSIsContainer) ) {
+        if ($_.Name -cne $_.Name.ToLower()) {
+            # Rename to lowercase
+            Move-Item -LiteralPath $_.FullName -Destination $_.FullName.ToLower()
+            Write-Host $_.FullName
+
+        }
+
         if( $_.Name -eq "desktop.ini") {
             # Delete all windows ini files
             Write-Host $_.FullName " deleted"
@@ -129,9 +126,9 @@ Get-ChildItem -recurse $BaseFolder -Force | % {
             Write-Host $_.FullName " deleted"
             Remove-Item $_.FullName
 
-        }elseif( $_.Name -like "*.apng") {
-            # apng is not supported (((yet)))
-            Write-Host $_.FullName + " deleted"
+        }elseif( $_.Name -like "*.toml") {
+            # Delete all sony vegas files
+            Write-Host $_.FullName " deleted"
             Remove-Item $_.FullName
 
         }elseif( $_.Name -like "*.db") {
@@ -139,39 +136,43 @@ Get-ChildItem -recurse $BaseFolder -Force | % {
             Write-Host $_.FullName + " deleted"
             Remove-Item $_.FullName -Force
 
+        }elseif( $_.Name -like "*.png") {
+            # Delete all Thumbs.db
+            E:\ect-0.8.3.exe $_.FullName
+
         }elseif( $_.Name -like "*.wav") {
             # Delete the swoosh sound without any objection
             $wavhash = Get-FileHash $_.FullName
             if ($wavhash.Hash -eq 'E4D5B469F2952137C73A85580175552DEBEE829C6EF41267AF0F1A119883B69B') {
-            Write-Host $_.FullName + " deleted with hash"
-            Remove-Item $_.FullName
-            } else {
-            Move-Item -LiteralPath $_.FullName -Destination $_.FullName.ToLower()
-            Write-Host $_.FullName
+                Write-Host $_.FullName + " deleted with hash"
+                Remove-Item $_.FullName
             }
+        
         }elseif ($_.Length -eq 0) {
             # Delete all empty files
             Write-Host $_.FullName + " deleted because empty "
             Remove-Item $_.FullName
-        }elseif ($_.Name -cne $_.Name.ToLower()) {
-            # Rename to lowercase
-            Move-Item -LiteralPath $_.FullName -Destination $_.FullName.ToLower()
-            Write-Host $_.FullName
+
         }
+    } else {
+    # Get all the directories and rename them to lowercase
+        $NName = $_.FullName.ToLower()
+        Write-Host $_.FullName
+        # Set temp name to rename to the same name
+        $TempItem = Move-Item -LiteralPath $_.FullName -Destination "$NName x" -PassThru
+        Move-Item -LiteralPath $TempItem.FullName -Destination $NName
     }
 }
 
-$TI = (Get-Culture).TextInfo
+Set-Location($CharactersFolder)
 
-Set-Location($CharacterFolder)
-
-'export default [' | Out-File -encoding UTF8 -FilePath $BaseFolder + "\characterlist.js"
+'[' | Out-File -encoding UTF8 -FilePath $BaseFolder"\characters.json"
 $charfolders = Get-ChildItem -Directory | %{
 $inifile  = $_.FullName + '\char.ini'
 $charicon = $_.FullName + '\char_icon.png'
 if (Test-Path $inifile) {
     Write-Host $TI.ToTitleCase($_.Name)
-    '    "' + $TI.ToTitleCase($_.Name) + '",' | Add-Content -Path $BaseFolder + "\characterlist.js"
+    '    "' + $TI.ToTitleCase($_.Name) + '",' | Add-Content -Path $BaseFolder"characters.json"
     }
 }
 
@@ -179,11 +180,27 @@ if (Test-Path $inifile) {
 
 Set-Location ($BaseFolder + '\sounds\general\')
 
-'export default [' | Out-File -encoding UTF8 -FilePath $BaseFolder + "\sfxlist.js"
-$charfolders = Get-ChildItem -File | %{
-if( $_.Name -like "sfx-*.wav") {
+Get-ChildItem -File -Recurse | %{
+    if( $_.Name -like "*.wav") {
+        $old = $_.FullName
+        $new = $old.Substring(0,$old.Length-4) + ".opus"
+        if( -not(Test-Path $new)) {
+            Write-Host $old
+            E:\opus-tools\opusenc.exe --music --downmix-mono --discard-comments --discard-pictures $old $new
+            if ( $LASTEXITCODE=0) {
+                Remove-Item $old
+            }
+        } else {
+            Remove-Item $old
+        }
+    }
+}
+
+'[' | Out-File -encoding UTF8 -FilePath $BaseFolder"\sfxlist.json"
+$sfxfolders = Get-ChildItem -File | %{
+if( $_.Name -like "sfx-*.opus") {
     Write-Host $_.Name
-    '    "' + $_.Name + '",' | Add-Content -Path $BaseFolder + "\sfxlist.js"
+    '    "' + $_.Name + '",' | Add-Content -Path $BaseFolder"\sfxlist.json"
     }
 }
 
