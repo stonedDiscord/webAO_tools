@@ -1,4 +1,4 @@
-﻿$BaseFolder       = "E:\Attorney Online\Attorney Online supermerge webAO edition\base\"
+﻿$BaseFolder       = "F:\Attorney Online\Attorney Online supermerge webAO edition\base\"
 $TI = (Get-Culture).TextInfo
 $CharactersFolder = $BaseFolder + "\characters\"
 
@@ -138,7 +138,7 @@ Get-ChildItem -recurse $BaseFolder -Force | % {
 
         }elseif( $_.Name -like "*.png") {
             # Delete all Thumbs.db
-            E:\ect-0.8.3.exe $_.FullName
+            Start-Process F:\PNG\ect-0.8.3.exe """$($_.FullName)""" -NoNewWindow
 
         }elseif( $_.Name -like "*.wav") {
             # Delete the swoosh sound without any objection
