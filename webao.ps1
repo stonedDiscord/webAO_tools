@@ -1,69 +1,16 @@
-﻿$BaseFolder       = "F:\Attorney Online\Attorney Online supermerge webAO edition\base\"
+﻿$BaseFolder       = "E:\Attorney Online\mosreq\base\"
 $TI = (Get-Culture).TextInfo
 $CharactersFolder = $BaseFolder + "\characters\"
 
-# Rename the demothings
-$filelist = @(Get-ChildItem -Force -Filter "*_char_icon.png" ($BaseFolder + "\misc\demothings\"))
-Write-Host $filelist
-ForEach ($file in $filelist){
-    $Index = $file.Name.IndexOf('_char_icon.png')
-    $CharacterName = $file.Name.Substring(0,$Index) 
-    Write-Host $CharacterName
-
-    # Test if the folder exists
-    Set-Location ($CharactersFolder+'\'+$CharacterName)
-
-    # If there is no char folder, create it
-    if(!$?){ mkdir ($CharactersFolder+'\'+$CharacterName) }
-
-    # Move item keeping same name.
-    Move-Item $file.FullName ($CharactersFolder+'\'+$CharacterName+"\char_icon.png").ToLower()    
-}
-
-# Rename the rosterthings
-$filelist = @(Get-ChildItem -Force -Filter "*_off.png" ($BaseFolder + "\misc\rosterimage\"))
-Write-Host $filelist
-ForEach ($file in $filelist){
-    $Index = $file.Name.IndexOf('_off.png')
-    $CharacterName = $file.Name.Substring(0,$Index) 
-    Write-Host $CharacterName
-
-    # Test if the folder exists
-    Set-Location ($CharactersFolder+'\'+$CharacterName)
-
-    # If there is no char folder, create it
-    if(!$?){ mkdir ($CharactersFolder+'\'+$CharacterName) }
-
-    # Move item keeping same name.
-    Move-Item $file.FullName ($CharactersFolder+'\'+$CharacterName+"\char_icon.png").ToLower()  
-}
-
 Set-Location ($BaseFolder + '\sounds\')
 
-# Move VNO blips
-$filelist = @(Get-ChildItem ($BaseFolder + "\sounds\bleeps\"))
+# Move blips
+$filelist = @(Get-ChildItem ($BaseFolder + "\sounds\general\sfx-blip*"))
 Write-Host $filelist
 ForEach ($file in $filelist){
     # Rename
-    Move-Item $file.FullName ($BaseFolder + "\sounds\general\sfx-blip" + $file.Name.ToLower())    
-    Write-Host $file.FullName
-}
-
-# Move TNC blips
-$filelist = @(Get-ChildItem ($BaseFolder + "\sounds\blips\"))
-Write-Host $filelist
-ForEach ($file in $filelist){
-    # Rename
-    Move-Item $file.FullName ($BaseFolder + "\sounds\general\sfx-blip" + $file.Name.ToLower())    
-    Write-Host $file.FullName
-}
-
-# Move spanish sfx
-$filelist = @(Get-ChildItem ($BaseFolder + "\sounds\sfx\"))
-Write-Host $filelist
-ForEach ($file in $filelist){
-    # Rename
-    Move-Item $file.FullName ($BaseFolder + "\sounds\general\" + $file.Name.ToLower())    
+    $NewName = $file.Name.ToLower() -replace 'sfx-blip', ''
+    Move-Item $file.FullName ($BaseFolder + '\sounds\blips\' + $NewName)    
     Write-Host $file.FullName
 }
 
@@ -136,11 +83,40 @@ Get-ChildItem -recurse $BaseFolder -Force | % {
             Write-Host $_.FullName + " deleted"
             Remove-Item $_.FullName -Force
 
+        }elseif( $_.Name -like "button*_on.png") {
+            # Delete all unused on buttons
+            Write-Host $_.FullName + " deleted"
+            Remove-Item $_.FullName -Force
+
+        }elseif( $_.Name -like "*.webp") {
+            Write-Host $_.FullName
+            # Optimize WebP
+            #Start-Process -NoNewWindow -FilePath "D:\PNG\pingo.exe" -ArgumentList "-s9",$_.FullName
+            E:\PNG\pingo.exe -s9 $_.FullName
+
         }elseif( $_.Name -like "*.png") {
-            # Delete all Thumbs.db
-            Start-Process F:\PNG\ect-0.8.3.exe """$($_.FullName)""" -NoNewWindow
+            Write-Host $_.FullName
+            # Optimize PNGs
+            E:\PNG\ect-0.8.3.exe """$($_.FullName)"""
+            #Start-Process -NoNewWindow -FilePath "D:\PNG\pingo.exe" -ArgumentList "-s9",$_.FullName
+            #E:\PNG\pingo.exe -s9 $_.FullName
+
+        }elseif( $_.Name -like "*.apng") {
+            Write-Host $_.FullName
+            # Rename first
+            $OriginalName = $_.FullName
+            $TempName = $_.FullName+".png"
+            Write-Host $TempName
+            Move-Item -LiteralPath $OriginalName -Destination $TempName
+            # Optimize PNGs
+            #Start-Process -NoNewWindow -Wait -FilePath "D:\PNG\pingo.exe" -ArgumentList "-s9","""$($TempName)"""
+            E:\PNG\pingo.exe -s9 $TempName
+            #E:\PNG\ect-0.8.3.exe """$($TempName)"""
+            # Rename back
+            Move-Item -LiteralPath $TempName -Destination $OriginalName
 
         }elseif( $_.Name -like "*.wav") {
+            Write-Host $_.FullName
             # Delete the swoosh sound without any objection
             $wavhash = Get-FileHash $_.FullName
             if ($wavhash.Hash -eq 'E4D5B469F2952137C73A85580175552DEBEE829C6EF41267AF0F1A119883B69B') {
@@ -178,7 +154,7 @@ if (Test-Path $inifile) {
 
 '];' | Add-Content -Path $BaseFolder + "characterlist.js"
 
-Set-Location ($BaseFolder + '\sounds\general\')
+Set-Location ($BaseFolder)
 
 Get-ChildItem -File -Recurse | %{
     if( $_.Name -like "*.wav") {
@@ -186,8 +162,32 @@ Get-ChildItem -File -Recurse | %{
         $new = $old.Substring(0,$old.Length-4) + ".opus"
         if( -not(Test-Path $new)) {
             Write-Host $old
-            E:\opus-tools\opusenc.exe --music --downmix-mono --discard-comments --discard-pictures $old $new
-            if ( $LASTEXITCODE=0) {
+            ffmpeg.exe -i $old $new
+            if ( $LASTEXITCODE=0 ) {
+                Remove-Item $old
+            }
+        } else {
+            Remove-Item $old
+        }
+    }elseif( $_.Name -like "*.ogg") {
+        $old = $_.FullName
+        $new = $old.Substring(0,$old.Length-4) + ".opus"
+        if( -not(Test-Path $new)) {
+            Write-Host $old
+            ffmpeg.exe -i $old $new
+            if ( $LASTEXITCODE=0 ) {
+                Remove-Item $old
+            }
+        } else {
+            Remove-Item $old
+        }
+    }elseif( $_.Name -like "*.mp3") {
+        $old = $_.FullName
+        $new = $old.Substring(0,$old.Length-4) + ".opus"
+        if( -not(Test-Path $new)) {
+            Write-Host $old
+            ffmpeg.exe -i $old $new
+            if ( $LASTEXITCODE=0 ) {
                 Remove-Item $old
             }
         } else {
@@ -195,13 +195,3 @@ Get-ChildItem -File -Recurse | %{
         }
     }
 }
-
-'[' | Out-File -encoding UTF8 -FilePath $BaseFolder"\sfxlist.json"
-$sfxfolders = Get-ChildItem -File | %{
-if( $_.Name -like "sfx-*.opus") {
-    Write-Host $_.Name
-    '    "' + $_.Name + '",' | Add-Content -Path $BaseFolder"\sfxlist.json"
-    }
-}
-
-'];' | Add-Content -Path $BaseFolder + "\sfxlist.js"
